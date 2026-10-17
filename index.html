@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#101827" />
+  <title>FocusTogether — Group Study</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <style>
+    body { min-height: 100vh; }
+    .hidden { display: none !important; }
+    .auth-screen {
+      min-height: 100vh; display: grid; place-items: center; background: linear-gradient(135deg, #eef1ff, #f7f7fd 55%, #ecf9f5);
+      padding: 24px;
+    }
+    .auth-card {
+      width: min(100%, 430px); background: rgba(255,255,255,.9); backdrop-filter: blur(8px);
+      border: 1px solid #e5e7f1; border-radius: 22px; box-shadow: 0 18px 38px rgba(36, 48, 80, .12); padding: 28px 26px 18px;
+    }
+    .auth-header { text-align: center; margin-bottom: 18px; }
+    .auth-header h2 { margin: 12px 0 8px; font-size: 28px; letter-spacing: -.8px; }
+    .auth-header p { margin: 0; color: #69768c; }
+    .auth-form { display: flex; flex-direction: column; gap: 12px; }
+    .auth-form label { display: flex; flex-direction: column; gap: 7px; font-size: 12px; font-weight: 700; color: #47536a; }
+    .auth-form input {
+      border: 1px solid #dfe3ef; border-radius: 12px; background: #f9fafc; padding: 12px 14px; font-size: 14px;
+    }
+    .auth-form input:focus { border-color: #7d6ff1; box-shadow: 0 0 0 4px rgba(125,111,241,.12); }
+    .auth-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+    .auth-toggle { background: transparent; border: 0; color: #554dcf; font-weight: 700; padding: 8px 0; }
+    .auth-status { min-height: 20px; margin: 10px 0 0; font-size: 12px; color: #47536a; }
+    .auth-status.error { color: #c63e4d; }
+    .auth-status.success { color: #1d895d; }
+    .app-shell.hidden { display: none; }
+    .note-viewer-content { min-width: min(70vw, 720px); max-height: 70vh; overflow: auto; }
+    .note-view-text { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; color: #47536a; }
+    .note-view-image { display: block; max-width: 100%; max-height: 65vh; margin: 0 auto; object-fit: contain; }
+    .note-view-frame { width: min(70vw, 800px); height: 70vh; border: 0; }
+    .profile-editor-avatar { width: 84px; height: 84px; margin: 0 auto 16px; display: grid; place-items: center; overflow: hidden; border-radius: 24px; background: #e5e2ff; color: #5e51d7; font-size: 32px; font-weight: 800; }
+    .profile-editor-avatar img, .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-details { min-width: 0; flex: 1; }
+    #profileBio { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px; }
+    .call-room-input { display: flex; gap: 8px; margin: 14px 0; }
+    .call-room-input input { min-width: 0; flex: 1; border: 1px solid #dfe3ef; border-radius: 9px; padding: 10px 12px; text-transform: uppercase; }
+    .call-video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 16px; }
+    .call-video-tile { min-width: 0; background: #101827; border-radius: 12px; overflow: hidden; color: white; }
+    .call-video-tile video { display: block; width: 100%; aspect-ratio: 16/9; object-fit: cover; background: #101827; }
+    .call-video-tile span { display: block; padding: 8px 10px; font-size: 11px; }
+    #callDialog { width: min(940px, calc(100vw - 32px)); max-width: 940px; }
+    #callDialog form { min-width: 0; }
+    .call-room-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .call-room-heading h2 { margin: 0; }
+    .call-live-indicator { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; padding: 5px 9px; background: #f2f3f8; color: #69768c; font-size: 10px; font-weight: 800; }
+    .call-live-indicator i { width: 7px; height: 7px; border-radius: 50%; background: #a4aabd; }
+    .call-live-indicator[data-state="live"] { color: #16845b; background: #e3f9ef; }
+    .call-live-indicator[data-state="live"] i { background: #24b77b; box-shadow: 0 0 0 4px #24b77b26; }
+    .call-live-indicator[data-state="connecting"] { color: #9b6a15; background: #fff4d9; }
+    .call-live-indicator[data-state="connecting"] i { background: #e5a52e; }
+    .call-live-indicator[data-state="error"] { color: #b43f4b; background: #ffeaed; }
+    .call-live-indicator[data-state="error"] i { background: #d84d5a; }
+    .call-room-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 12px 0; color: #69768c; font-size: 12px; }
+    .call-room-meta strong { color: #303b52; }
+    .call-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+    .call-controls button:disabled { cursor: not-allowed; opacity: .55; }
+    #callVideoGrid:empty::after { content: "Participant videos will appear here when they join."; grid-column: 1/-1; padding: 42px 16px; border: 1px dashed #dfe3ef; border-radius: 12px; color: #9099aa; text-align: center; }
+    .call-video-tile { position: relative; }
+    .call-video-tile video { min-height: 150px; }
+    .call-video-tile span { background: #101827; }
+    .call-status { min-height: 20px; margin: 12px 0 0; color: #69768c; font-size: 12px; }
+  </style>
+  <div id="authScreen" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="brand" style="justify-content:center;padding-bottom:0;">
+          <div class="brand-mark">F</div>
+          <div><strong>FocusTogether</strong><small>Study, together.</small></div>
+        </div>
+        <h2 id="authTitle">Welcome back</h2>
+        <p id="authSubtitle">Login to continue with your study groups.</p>
+      </div>
+      <form id="authForm" class="auth-form">
+        <label>Email
+          <input id="authEmail" type="email" placeholder="you@example.com" required />
+        </label>
+        <label>Password
+          <input id="authPassword" type="password" placeholder="••••••••" required />
+        </label>
+        <label id="confirmPasswordWrap" class="hidden">Confirm password
+          <input id="authConfirmPassword" type="password" placeholder="Repeat your password" />
+        </label>
+        <div class="auth-actions">
+          <button id="authSubmitBtn" class="primary-button" type="submit">Login</button>
+          <button id="toggleAuthModeBtn" class="secondary-button" type="button">Create account</button>
+          <button id="forgotPasswordBtn" class="auth-toggle" type="button">Forgot password?</button>
+        </div>
+      </form>
+      <form id="resetPasswordForm" class="auth-form hidden">
+        <label>New password
+          <input id="newPassword" type="password" placeholder="At least 6 characters" minlength="6" required />
+        </label>
+        <label>Confirm new password
+          <input id="confirmNewPassword" type="password" placeholder="Enter the password again" minlength="6" required />
+        </label>
+        <div class="auth-actions">
+          <button id="resetPasswordSubmitBtn" class="primary-button" type="submit">Update password</button>
+        </div>
+      </form>
+      <p id="authStatus" class="auth-status" aria-live="polite"></p>
+    </div>
+  </div>
+  <div class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">F</div><div><strong>FocusTogether</strong><small>Study, together.</small></div></div>
+      <div class="sidebar-label">WORKSPACE</div>
+      <button class="nav-item active" data-view="dashboard"><span>◫</span> Dashboard</button>
+      <button class="nav-item" data-view="groups"><span>♧</span> Study groups</button>
+      <button class="nav-item" data-view="sessions"><span>◷</span> Study sessions</button>
+      <button class="nav-item" data-view="notes"><span>▤</span> Notes & uploads</button>
+      <button class="nav-item" data-view="assistant"><span>✳</span> AI study assistant</button>
+      <div class="sidebar-bottom">
+        <div class="focus-card"><div class="focus-dot"></div><strong>Distraction-free mode</strong><p>Keep this space for learning. One task at a time.</p><button id="focusToggle" class="small-button">Enable focus mode</button></div>
+        <div class="profile"><div class="avatar" id="profileAvatar">S</div><div class="profile-details"><strong id="profileName">Student</strong><small id="profileBio">Study workspace</small></div><button id="editName" type="button" title="Edit profile">✎</button></div>
+        <button id="logoutBtn" class="secondary-button" style="width:100%;margin-top:12px;">Logout</button>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div><div class="eyebrow" id="todayLabel">YOUR STUDY SPACE</div><h1 id="pageTitle">Good study session.</h1></div>
+        <div class="top-actions"><button class="icon-button" id="notifyBtn" title="Enable reminders">♧</button><button class="primary-button" id="quickStart">＋ Start focus session</button></div>
+      </header>
+      <div id="notice" class="notice hidden"></div>
+      <section id="view-dashboard" class="view">
+        <div class="hero">
+          <div class="hero-copy"><div class="pill"><span></span> YOUR FOCUS, YOUR PACE</div><h2>Small steps.<br/><span>Big progress.</span></h2><p>A quieter place to learn together, stay accountable, and make every study session count.</p><button class="light-button" id="heroStart">Start a focus session <span>↗</span></button></div>
+          <div class="hero-art"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="book">✦<div class="book-line"></div><div class="book-line short"></div></div><div class="floating-note note-a">✓ Task completed</div><div class="floating-note note-b">25:00 <small>focus time</small></div></div>
+        </div>
+        <div class="stats-grid">
+          <article class="stat-card"><div class="stat-top"><span>Total study time</span><span class="stat-icon purple">◷</span></div><strong id="totalTime">0h 00m</strong><small>Tracked focus sessions</small></article>
+          <article class="stat-card"><div class="stat-top"><span>Study streak</span><span class="stat-icon orange">✦</span></div><strong id="streak">0 days</strong><small>Consecutive study days</small></article>
+          <article class="stat-card"><div class="stat-top"><span>Tasks completed</span><span class="stat-icon green">✓</span></div><strong id="completedCount">0</strong><small>Across your study groups</small></article>
+          <article class="stat-card"><div class="stat-top"><span>Study groups</span><span class="stat-icon blue">♧</span></div><strong id="groupCount">0</strong><small>Your learning circles</small></article>
+        </div>
+        <div class="content-grid">
+          <article class="panel"><div class="panel-heading"><div><h3>Today's focus</h3><p>Make a little progress, consistently.</p></div><span class="live-tag">● LIVE TIMER</span></div>
+            <div class="timer-wrap"><div class="timer-ring" id="timerRing"><div class="timer-inner"><span id="timerMode">FOCUS SESSION</span><strong id="timerDisplay">25:00</strong><small id="timerStatus">Ready when you are</small></div></div></div>
+            <div class="timer-controls"><button class="primary-button" id="timerStart">▶ Start</button><button class="secondary-button" id="timerReset">↺ Reset</button><button class="secondary-button" id="timerBreak">Break</button></div>
+            <div class="timer-foot"><span>Focus <b>25 min</b></span><span>Break <b>5 min</b></span><span>Stay present <b>One task</b></span></div>
+          </article>
+          <article class="panel"><div class="panel-heading"><div><h3>Next study session</h3><p>Plan it. Show up. Learn together.</p></div><button class="text-button" data-go="sessions">View all ↗</button></div><div id="upcomingList" class="stack-list empty-state">No sessions scheduled yet.<br/>Add one to get started.</div><button class="outline-button full" id="addSessionQuick">＋ Schedule a session</button></article>
+        </div>
+        <div class="content-grid lower-grid">
+          <article class="panel"><div class="panel-heading"><div><h3>Your tasks</h3><p>Keep the next step clear.</p></div><button class="text-button" data-go="groups">Manage ↗</button></div><div id="taskPreview" class="stack-list empty-state">No tasks yet. Create a group and add your first task.</div></article>
+          <article class="panel"><div class="panel-heading"><div><h3>Study rhythm</h3><p>Your recent focus days</p></div></div><div id="weekChart" class="week-chart"></div><div class="chart-legend"><span><i></i> Focus minutes</span><strong id="weekTotal">0 minutes this week</strong></div></article>
+        </div>
+      </section>
+      <section id="view-groups" class="view hidden">
+        <div class="section-intro"><div><h2>Study groups</h2><p>Create a focused space for each subject or project.</p></div><button class="primary-button" id="createGroupBtn">＋ Create group</button></div>
+        <div id="groupsGrid" class="groups-grid"></div>
+      </section>
+      <section id="view-sessions" class="view hidden">
+        <div class="section-intro"><div><h2>Study sessions</h2><p>Set a time and get a reminder when it's time to study.</p></div><button class="primary-button" id="createSessionBtn">＋ Schedule session</button></div>
+        <div class="panel"><div id="sessionsList" class="stack-list empty-state">No sessions scheduled yet.</div></div>
+      </section>
+      <section id="view-notes" class="view hidden">
+        <div class="section-intro"><div><h2>Notes & uploads</h2><p>Keep explanations, images, and learning resources in one place.</p></div><button class="primary-button" id="addNoteBtn">＋ Add note</button></div>
+        <div class="upload-banner"><div class="upload-symbol">↑</div><div><strong>Upload a photo or study document</strong><p>Images and text files are stored in this browser prototype.</p></div><label class="secondary-button file-button">Choose files<input id="fileInput" type="file" accept="image/*,.txt,.pdf" multiple /></label></div>
+        <div id="notesGrid" class="notes-grid"></div>
+      </section>
+      <section id="view-assistant" class="view hidden">
+        <div class="section-intro"><div><h2>AI study assistant</h2><p>Ask a question, break down a concept, or plan your revision.</p></div><span class="demo-label">AI-POWERED</span></div>
+        <div class="assistant-layout"><div class="assistant-chat panel"><div class="assistant-head"><div class="assistant-avatar">✳</div><div><strong>Study Buddy</strong><small><span class="online-dot"></span> Ready to help · Secure AI</small></div></div><div id="chatMessages" class="chat-messages"><div class="chat-bubble bot">Hi! I'm your AI study helper. Ask me a question or choose a prompt below.</div></div><div class="suggestions"><button class="suggestion">Explain recursion simply</button><button class="suggestion">Make a revision plan</button><button class="suggestion">Quiz me on databases</button></div><form id="chatForm" class="chat-form"><input id="chatInput" maxlength="4000" placeholder="Ask an academic question..." autocomplete="off" required/><button class="primary-button" type="submit">Send ↑</button></form></div><div class="panel assistant-side"><h3>Ways I can help</h3><div class="helper-row"><span>✦</span><div><strong>Understand concepts</strong><p>Ask for simpler explanations and examples.</p></div></div><div class="helper-row"><span>▤</span><div><strong>Revise efficiently</strong><p>Turn a topic into a checklist or quiz.</p></div></div><div class="helper-row"><span>◷</span><div><strong>Stay on track</strong><p>Break big goals into focused sessions.</p></div></div><div class="warning-note">Your messages are sent to a secure Supabase Edge Function. The OpenAI API key stays on the server and is never exposed in this app.</div></div></div>
+      </section>
+      <footer>FocusTogether <span>·</span> Built for focused learning <span>·</span> Prototype v1</footer>
+    </main>
+  </div>
+  <dialog id="groupDialog"><form id="groupForm"><div class="dialog-head"><div><span class="eyebrow">YOUR LEARNING CIRCLE</span><h2>Create a study group</h2></div><button class="close-btn" id="closeGroupDialogBtn" type="button" aria-label="Close">×</button></div><label>Group name<input id="groupName" required placeholder="e.g. BCA Semester 1"/></label><label>Subject or goal<input id="groupSubject" required placeholder="e.g. C Programming"/></label><label>Description<textarea id="groupDescription" placeholder="What will you study together?"></textarea></label><div class="dialog-actions"><button class="secondary-button" id="cancelGroupBtn" type="button">Cancel</button><button class="primary-button" id="saveGroup" type="submit">Create group</button></div></form></dialog>
+  <dialog id="taskDialog"><form id="taskForm"><div class="dialog-head"><div><span class="eyebrow">STAY ACCOUNTABLE</span><h2>Add a study task</h2></div><button class="close-btn" id="closeTaskDialogBtn" type="button" aria-label="Close">×</button></div><label>Task title<input id="taskTitle" required placeholder="e.g. Revise pointers"/></label><label>Study group<select id="taskGroup"></select></label><label>Due date<input id="taskDue" type="date"/></label><div class="dialog-actions"><button class="secondary-button" id="cancelTaskBtn" type="button">Cancel</button><button class="primary-button" id="saveTask" type="submit">Add task</button></div></form></dialog>
+  <dialog id="sessionDialog"><form method="dialog" id="sessionForm"><div class="dialog-head"><div><span class="eyebrow">MAKE TIME TO LEARN</span><h2>Schedule a session</h2></div><button class="close-btn" id="closeSessionDialogBtn" type="button" aria-label="Close">×</button></div><label>Session title<input id="sessionTitle" required placeholder="e.g. Data structures revision"/></label><label>Study group<select id="sessionGroup"></select></label><div class="form-row"><label>Date<input id="sessionDate" type="date" required/></label><label>Time<input id="sessionTime" type="time" required/></label></div><label>Reminder<select id="sessionReminder"><option value="0">At start time</option><option value="5">5 minutes before</option><option value="15" selected>15 minutes before</option><option value="30">30 minutes before</option></select></label><div class="dialog-actions"><button class="secondary-button" id="cancelSessionBtn" type="button">Cancel</button><button class="primary-button" id="saveSession" value="default">Schedule</button></div></form></dialog>
+  <dialog id="noteDialog"><form method="dialog" id="noteForm"><div class="dialog-head"><div><span class="eyebrow">SAVE WHAT YOU LEARN</span><h2>Add a note</h2></div><button class="close-btn" id="closeNoteDialogBtn" type="button" aria-label="Close">×</button></div><label>Title<input id="noteTitle" required placeholder="e.g. Binary search"/></label><label>Study group<select id="noteGroup"></select></label><label>Content<textarea id="noteContent" rows="5" placeholder="Write your key points..."></textarea></label><div class="dialog-actions"><button class="secondary-button" id="cancelNoteBtn" type="button">Cancel</button><button class="primary-button" id="saveNote" value="default">Save note</button></div></form></dialog>
+  <dialog id="noteViewerDialog"><div class="dialog-head"><div><span class="eyebrow">STUDY LIBRARY</span><h2 id="noteViewerTitle">Resource</h2></div><button class="close-btn" id="closeNoteViewerBtn" type="button" aria-label="Close">×</button></div><div id="noteViewerContent" class="note-viewer-content"></div></dialog>
+  <dialog id="profileDialog"><form id="profileForm"><div class="dialog-head"><div><span class="eyebrow">YOUR ACCOUNT</span><h2>Edit profile</h2></div><button class="close-btn" id="closeProfileDialogBtn" type="button" aria-label="Close">×</button></div><div class="profile-editor-avatar" id="profileEditorAvatar">S</div><label>Profile photo<input id="profilePhoto" type="file" accept="image/*" /></label><button class="text-button" id="removeProfilePhotoBtn" type="button">Remove photo</button><label>Display name<input id="profileEditName" type="text" maxlength="40" required placeholder="Your name" /></label><label>Bio<textarea id="profileEditBio" rows="3" maxlength="160" placeholder="A short line about you"></textarea></label><p class="auth-status">Your profile is saved in this browser.</p><div class="dialog-actions"><button class="secondary-button" id="cancelProfileBtn" type="button">Cancel</button><button class="primary-button" type="submit">Save profile</button></div></form></dialog>
+  <dialog id="callDialog"><form method="dialog" id="callForm"><div class="dialog-head"><div><span class="eyebrow">GROUP STUDY ROOM</span><div class="call-room-heading"><h2 id="callRoomName">Study Room</h2><span id="callLiveIndicator" class="call-live-indicator" data-state="idle"><i></i><span id="callLiveText">Not connected</span></span></div></div><button class="close-btn" value="cancel" aria-label="Close and leave room">×</button></div><div class="call-room-meta"><span>Room code: <strong id="callRoomCodeLabel">—</strong></span><span id="callParticipantCount">0 students</span></div><p class="warning-note">Share the room code only with people you trust.</p><label for="callRoomCode">Join a room</label><div class="call-room-input"><input id="callRoomCode" autocomplete="off" maxlength="64" placeholder="Enter group invite code" required/><button type="button" class="outline-button" id="copyCallCodeBtn">Copy code</button></div><div class="call-controls"><button type="button" class="primary-button" id="joinCallBtn">Join study room</button><button type="button" class="secondary-button" id="cameraBtn" disabled>Turn camera off</button><button type="button" class="secondary-button" id="micBtn" disabled>Mute microphone</button><button type="button" class="secondary-button" id="speakerBtn" disabled>Speaker on</button><button type="button" class="secondary-button" id="shareBtn" disabled>Share screen</button></div><div id="callVideoGrid" class="call-video-grid"><div class="call-video-tile hidden" id="localVideoTile"><video id="localVideo" autoplay muted playsinline></video><span id="localVideoLabel">You</span></div></div><p id="callStatus" class="call-status" aria-live="polite">Enter a room code and join to start a call.</p><div class="dialog-actions"><button type="button" class="primary-button" id="leaveStudyRoomBtn" disabled>Leave Study Room</button></div></form></dialog>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>

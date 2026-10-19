@@ -67,6 +67,14 @@
   function showAppScreen() {
     if (authScreen) authScreen.classList.add("hidden");
     if (appShell) appShell.classList.remove("hidden");
+    if (window.focusTogetherApp?.loadGroups) {
+      window.focusTogetherApp.loadGroups().catch((error) => {
+        console.error("Unable to load shared study groups:", error);
+        if (typeof window.showNotice === "function") {
+          window.showNotice("Could not load shared groups. Check the Supabase group setup.");
+        }
+      });
+    }
   }
 
   function isSupabaseConfigured() {

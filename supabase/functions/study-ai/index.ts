@@ -34,8 +34,8 @@ Deno.serve(async (request) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
-  const openAiApiKey = Deno.env.get("OPENAI_API_KEY");
-  if (!supabaseUrl || !supabaseAnonKey || !openAiApiKey) {
+  const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
+  if (!supabaseUrl || !supabaseAnonKey || !geminiApiKey) {
     console.error("AI chat service is missing required server configuration.");
     return jsonResponse({ error: "AI chat service is not configured." }, 500);
   }
@@ -67,58 +67,67 @@ Deno.serve(async (request) => {
     return jsonResponse({ error: "Question must be under 4,000 characters." }, 413);
   }
 
-  let openAiResponse: Response;
+  let geminiResponse: Response;
   try {
-    openAiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${openAiApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: "You are FocusTogether's helpful AI study assistant. Explain academic topics clearly, support learning with examples and questions, and keep answers focused. Do not claim to have access to materials the student has not provided.",
+    geminiResponse = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/interactions",
+      {
+        method: "POST",
+        headers: {
+          "x-goog-api-key": geminiApiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gemini-3.8-flash",
+          system_instruction: "You are FocusTogether's helpful AI study assistant. Explain academic topics clearly, support learning with examples and questions, and keep answers focused. Do not claim to have access to materials the student has not provided.",
+          input: body.question.trim(),
+          store: false,
+          generation_config: {
+            max_output_tokens: 800,
+            thinking_level: "low",
           },
-          { role: "user", content: body.question.trim() },
-        ],
-        max_tokens: 800,
-      }),
-    });
+        }),
+      },
+    );
   } catch (error) {
-    console.error("OpenAI request failed:", error);
+    console.error("Gemini request failed:", error);
     return jsonResponse({ error: "Could not reach the AI service. Please try again." }, 502);
   }
 
-  if (!openAiResponse.ok) {
-    console.error(`OpenAI returned status ${openAiResponse.status}.`);
+  if (!geminiResponse.ok) {
+    let providerError = "";
+    try {
+      const errorBody: unknown = await geminiResponse.json();
+      if (isRecord(errorBody) && isRecord(errorBody.error) && typeof errorBody.error.message === "string") {
+        providerError = ` ${errorBody.error.message.slice(0, 500)}`;
+      }
+    } catch (error) {
+      console.error("Could not read Gemini error response:", error);
+    }
+    console.error(`Gemini returned status ${geminiResponse.status}.${providerError}`);
     return jsonResponse({ error: "The AI service could not answer right now. Please try again." }, 502);
   }
 
   let completion: unknown;
   try {
-    completion = await openAiResponse.json();
+    completion = await geminiResponse.json();
   } catch (error) {
-    console.error("OpenAI returned an invalid response:", error);
+    console.error("Gemini returned an invalid response:", error);
     return jsonResponse({ error: "The AI service returned an invalid response." }, 502);
   }
 
-  if (!isRecord(completion) || !Array.isArray(completion.choices)) {
-    console.error("OpenAI response did not contain an assistant message.");
+  if (!isRecord(completion) || !Array.isArray(completion.steps)) {
+    console.error("Gemini response did not contain an assistant message.");
     return jsonResponse({ error: "The AI service returned an invalid response." }, 502);
   }
 
-  const choice = completion.choices[0];
-  if (!isRecord(choice) || !isRecord(choice.message)) {
-    console.error("OpenAI response did not contain an assistant message.");
-    return jsonResponse({ error: "The AI service returned an invalid response." }, 502);
-  }
-
-  const answer = choice.message.content;
-  if (typeof answer !== "string" || !answer.trim()) {
-    console.error("OpenAI response did not contain an assistant message.");
+  const answer = completion.steps
+    .filter((step) => isRecord(step) && step.type === "model_output" && Array.isArray(step.content))
+    .flatMap((step) => isRecord(step) && Array.isArray(step.content) ? step.content : [])
+    .map((part) => isRecord(part) && part.type === "text" && typeof part.text === "string" ? part.text : "")
+    .join("");
+  if (!answer.trim()) {
+    console.error("Gemini response did not contain an assistant message.");
     return jsonResponse({ error: "The AI service returned an invalid response." }, 502);
   }
 

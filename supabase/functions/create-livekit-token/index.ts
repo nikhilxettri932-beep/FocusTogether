@@ -38,7 +38,7 @@ Deno.serve(async (request) => {
     return jsonResponse({ error: "Call service is not configured." }, 500);
   }
 
-  let body: { roomName?: unknown; participantName?: unknown };
+  let body: { groupId?: unknown; participantName?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -48,18 +48,31 @@ Deno.serve(async (request) => {
   if (
     !body ||
     typeof body !== "object" ||
-    typeof body.roomName !== "string" ||
-    !/^focus-[a-zA-Z0-9_-]{4,64}$/.test(body.roomName)
+    typeof body.groupId !== "string" ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.groupId)
   ) {
-    return jsonResponse({ error: "Invalid call room name." }, 400);
+    return jsonResponse({ error: "A valid study group is required." }, 400);
   }
 
   const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
     auth: { autoRefreshToken: false, persistSession: false },
   });
   const { data: { user }, error: userError } = await supabase.auth.getUser(accessToken);
   if (userError || !user) {
     return jsonResponse({ error: "Your login session is invalid or expired." }, 401);
+  }
+
+  const { data: isMember, error: membershipError } = await supabase.rpc(
+    "is_study_group_member",
+    { p_group_id: body.groupId },
+  );
+  if (membershipError) {
+    console.error("Unable to verify study group membership:", membershipError);
+    return jsonResponse({ error: "Could not verify your study group membership." }, 500);
+  }
+  if (isMember !== true) {
+    return jsonResponse({ error: "Join this study group before starting its call." }, 403);
   }
 
   const requestedName = typeof body.participantName === "string"
@@ -75,7 +88,7 @@ Deno.serve(async (request) => {
     });
     token.addGrant({
       roomJoin: true,
-      room: body.roomName,
+      room: `focus-${body.groupId.toLowerCase()}`,
       canPublish: true,
       canSubscribe: true,
       canPublishData: true,

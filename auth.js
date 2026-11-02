@@ -71,7 +71,7 @@
       window.focusTogetherApp.loadGroups().catch((error) => {
         console.error("Unable to load shared study groups:", error);
         if (typeof window.showNotice === "function") {
-          window.showNotice("Could not load shared groups. Check the Supabase group setup.");
+          window.showNotice(error.message || "Could not load shared groups. Check the Supabase group setup.");
         }
       });
     }
@@ -247,6 +247,7 @@
       }
 
       if (event === "SIGNED_OUT") {
+        window.focusTogetherApp?.clearPresence?.();
         authForm.reset();
         resetPasswordForm.reset();
         showLoginForm();

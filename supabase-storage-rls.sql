@@ -64,70 +64,55 @@ USING (
 
 CREATE POLICY "Group members can view group files"
 ON storage.objects FOR SELECT
-USING (
-  bucket_id = 'group-private'
-  AND auth.role() = 'authenticated'
-  AND split_part(name, '/', 1) = 'groups'
-  AND EXISTS (
-    SELECT 1
-    FROM public.group_members gm
-    WHERE gm.user_id = auth.uid()
-      AND gm.group_id::text = split_part(name, '/', 2)
-  )
-);
+USING (CASE
+  WHEN bucket_id = 'group-private'
+    AND auth.role() = 'authenticated'
+    AND split_part(name, '/', 1) = 'groups'
+    AND split_part(name, '/', 2) ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+    THEN public.can_access_study_group_files(split_part(name, '/', 2)::uuid, 'view')
+  ELSE false
+END);
 
 CREATE POLICY "Group members can upload group files"
 ON storage.objects FOR INSERT
-WITH CHECK (
-  bucket_id = 'group-private'
-  AND auth.role() = 'authenticated'
-  AND split_part(name, '/', 1) = 'groups'
-  AND EXISTS (
-    SELECT 1
-    FROM public.group_members gm
-    WHERE gm.user_id = auth.uid()
-      AND gm.group_id::text = split_part(name, '/', 2)
-  )
-);
+WITH CHECK (CASE
+  WHEN bucket_id = 'group-private'
+    AND auth.role() = 'authenticated'
+    AND split_part(name, '/', 1) = 'groups'
+    AND split_part(name, '/', 2) ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+    THEN public.can_access_study_group_files(split_part(name, '/', 2)::uuid, 'upload')
+  ELSE false
+END);
 
 CREATE POLICY "Group members can update group files"
 ON storage.objects FOR UPDATE
-USING (
-  bucket_id = 'group-private'
-  AND auth.role() = 'authenticated'
-  AND split_part(name, '/', 1) = 'groups'
-  AND EXISTS (
-    SELECT 1
-    FROM public.group_members gm
-    WHERE gm.user_id = auth.uid()
-      AND gm.group_id::text = split_part(name, '/', 2)
-  )
-)
-WITH CHECK (
-  bucket_id = 'group-private'
-  AND auth.role() = 'authenticated'
-  AND split_part(name, '/', 1) = 'groups'
-  AND EXISTS (
-    SELECT 1
-    FROM public.group_members gm
-    WHERE gm.user_id = auth.uid()
-      AND gm.group_id::text = split_part(name, '/', 2)
-  )
-);
+USING (CASE
+  WHEN bucket_id = 'group-private'
+    AND auth.role() = 'authenticated'
+    AND split_part(name, '/', 1) = 'groups'
+    AND split_part(name, '/', 2) ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+    THEN public.can_access_study_group_files(split_part(name, '/', 2)::uuid, 'delete')
+  ELSE false
+END)
+WITH CHECK (CASE
+  WHEN bucket_id = 'group-private'
+    AND auth.role() = 'authenticated'
+    AND split_part(name, '/', 1) = 'groups'
+    AND split_part(name, '/', 2) ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+    THEN public.can_access_study_group_files(split_part(name, '/', 2)::uuid, 'upload')
+  ELSE false
+END);
 
 CREATE POLICY "Group members can delete group files"
 ON storage.objects FOR DELETE
-USING (
-  bucket_id = 'group-private'
-  AND auth.role() = 'authenticated'
-  AND split_part(name, '/', 1) = 'groups'
-  AND EXISTS (
-    SELECT 1
-    FROM public.group_members gm
-    WHERE gm.user_id = auth.uid()
-      AND gm.group_id::text = split_part(name, '/', 2)
-  )
-);
+USING (CASE
+  WHEN bucket_id = 'group-private'
+    AND auth.role() = 'authenticated'
+    AND split_part(name, '/', 1) = 'groups'
+    AND split_part(name, '/', 2) ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+    THEN public.can_access_study_group_files(split_part(name, '/', 2)::uuid, 'delete')
+  ELSE false
+END);
 
 -- Optional: if you want to validate bucket names before upload,
 -- make sure the two buckets are created in Storage and are private.

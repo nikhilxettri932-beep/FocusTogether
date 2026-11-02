@@ -3,13 +3,26 @@
 A responsive browser-based prototype for a college web-development project.
 
 ## Features working in this prototype
-- Dashboard with study statistics and recent weekly focus chart
+- Dashboard with a separate Analysis & Progress page showing daily/weekly/monthly study time, custom-goal completion, study streaks, a calendar heatmap, 7/30-day focus charts, task-based subject and group statistics, and downloadable personal reports
 - Create study groups and generate invitation codes
-- Add and complete study tasks
+- View friends from shared study groups and see their online/offline status in real time
+- Send group chat messages and owner-only announcements
+- Let group owners remove members and control members' shared-file access
+- Run a synchronized Pomodoro timer with a study group
+- Draw together on a group whiteboard; group owners can clear it
+- Add and complete study tasks with completion dates in the progress calendar
 - Schedule study sessions and show in-app/browser reminders
 - Pomodoro-style focus timer and browser-local study-time tracking
+- Completed focus-session history synced to Supabase for signed-in users
+- Editable personal daily and weekly goals with completion tracking and cloud sync
+- Selectable date-range progress reports with focus-time charts, calendar heatmap, and completed task breakdowns
+- Dark mode with a saved theme preference
 - Save personal notes locally, or share notes, tasks, and uploaded files with study-group members
+- Organize study resources into personal or shared group folders; upload and preview private PDFs/images, write notes, and discuss shared resources with member-only comments
+- Use a collaborative dotted-grid whiteboard with pen, marker, eraser, personal undo, owner-only clear, and automatic group sync
+- Manage group upload, viewing, and delete permissions; Supabase row-level and Storage policies enforce access
 - AI study assistant powered by Gemini through an authenticated Supabase Edge Function
+- Generate note summaries, multiple-choice practice quizzes, flashcards, and seven-day study plans in English or Hinglish from saved text notes or pasted study material
 - Focus mode that hides navigation clutter
 - LiveKit audio/video study calls with camera, microphone, and screen-share controls
 - LiveKit group study rooms with participant video tiles, room status/count, speaker playback mute, and leave-room controls
@@ -17,13 +30,14 @@ A responsive browser-based prototype for a college web-development project.
 
 ## Important limitations
 This is a front-end prototype, not a production-ready multi-user service.
-- Personal tasks, notes, sessions, and profile settings are stored in the current browser. Group tasks, notes, and uploaded files sync through Supabase after setup.
-- Profile changes are browser-local and are not synced to Supabase or other devices.
-- Study group details, membership, group tasks, group notes, and group uploads sync across accounts after the database and Storage setup below. Scheduled sessions and profile changes remain browser-local.
+- Personal tasks, notes, scheduled sessions, and profile settings are stored in the current browser. Daily and weekly goal text/completion status and completed focus-session history sync to Supabase for signed-in users; group tasks, notes, and uploaded files sync after setup.
+- Subject-wise analytics group completed tasks by their study-group subject. Focus sessions are not currently tagged with a subject, so study-time charts remain unassigned to subjects.
+- Profile photos and bios are browser-local; your display name is shared with members of your study groups so they can identify you in the friends list.
+- Study group details, membership, tasks, notes, resource folders and comments, chat, shared timers, whiteboards, and uploads sync after the database and Storage setup below. Group owners can restrict members' file access and remove members. Scheduled sessions and profile changes remain browser-local.
 - The AI assistant requires a Gemini API key configured as a Supabase server-side secret.
 - Calls use LiveKit for realtime audio/video and Supabase Edge Functions to issue short-lived tokens. The function verifies group membership and derives a private room from the group ID; invite codes alone cannot authorize a call.
 - Reminders work while the page is open. Reliable reminders while the browser is closed require push notifications and server-side scheduling.
-- File uploads are local and should be kept small. A production version needs private cloud storage and access policies.
+- Personal uploads stay in this browser; group uploads use private Supabase Storage after setup. Keep files reasonably small.
 
 ## Run it
 1. Extract the ZIP.
@@ -33,10 +47,10 @@ This is a front-end prototype, not a production-ready multi-user service.
 5. Camera, microphone, and screen capture generally require `localhost` or HTTPS and user permission.
 
 ## Create and join study groups
-1. In the Supabase dashboard, open **SQL Editor** and run [`supabase/groups.sql`](./supabase/groups.sql). This creates the shared groups, member-only tasks and notes, and secure create/join/list functions.
-2. Create private Storage buckets named `user-private` and `group-private`, then run [`supabase-storage-rls.sql`](./supabase-storage-rls.sql) to apply the private-file access policies.
+1. In the Supabase dashboard, open **SQL Editor** and run (or rerun) [`supabase/groups.sql`](./supabase/groups.sql). This creates the shared groups, member-only tasks, notes, resource folders and comments, chat, shared group timers and whiteboards, secure create/join/list functions, friend profiles and UID-based friend requests, personal goals and focus history, task completion timestamps, group-owner management functions, and group-member/friend-only Realtime presence policies. Any signed-in user can search an exact public friend UID; friend names and photos are returned for search results, while internal account UUIDs are not displayed as friend IDs. Profile name, bio, and photo are saved to the profile table and restored when the user signs in. Ensure Realtime is enabled for the project.
+2. Create private Storage buckets named `user-private` and `group-private`, then run (or rerun) [`supabase-storage-rls.sql`](./supabase-storage-rls.sql) to apply the private-file access policies. Group owners can manage members and allow or restrict member uploads, file viewing, and file deletion; the policies are enforced by Supabase, not just the UI.
 3. Publish the updated `app.js`, `index.html`, and `auth.js` files to GitHub Pages. Users must be signed in to create or join groups.
-4. A user creates a group and shares its invite code. Other users choose **Join group**, enter that code, and can add group tasks and notes, upload resources, and open the group's call room.
+4. A user creates a group and shares its invite code. Other users choose **Join group**, enter that code, and can chat, draw on the shared whiteboard, use the group's focus timer, share notes, tasks and uploads, organize materials into shared folders, comment on resources, open the group's call room, and see group members' online status from **Friends**. Group owners can mark chat posts as announcements, manage members, set file permissions and clear the whiteboard. People who share a study group appear as study contacts; UID-added friends appear after accepting a friend request.
 5. Groups created before this shared-group setup were saved only in their creator's browser. Re-create them after running the SQL so other accounts can join. Scheduled sessions remain browser-local.
 
 ## Audio/video study calls (LiveKit)
@@ -62,6 +76,9 @@ This is a front-end prototype, not a production-ready multi-user service.
    ```
 3. The assistant requires a signed-in Supabase user. The browser sends the question to the Edge Function using the user's Supabase session; the function verifies the session and calls Gemini using the server-side secret.
 4. Never put the Gemini API key in `app.js`, `auth.js`, HTML, or any other browser-visible file. If the secret is missing or the service is unavailable, the assistant shows an error instead of returning a sample response.
+5. In **AI study assistant**, choose a study tool and answer language. You can select a saved text note, paste material, load a `.txt`, `.md`, or `.csv` file (up to 2 MB; up to 12,000 characters are sent to the AI), or attach a JPEG, PNG, WebP, or GIF image up to 3 MB and ask a question or create a summary, quiz, or flashcards from it. PDF files are not extracted by the browser yet; paste their text or use a text export. Redeploy `study-ai` after changing the Edge Function.
+
+6. In **Friends**, copy your public friend UID and share it with someone. Search an exact UID to view that user's display name and profile photo, send a friend request, and accept incoming requests. Accepted friends can see one another's online status, even without sharing a study group. A user's profile name, public friend UID, and profile photo are searchable by any signed-in account; the Supabase account UUID is not used as the public friend UID.
 
 ## Supabase Auth setup
 1. Create a Supabase project at https://supabase.com.
@@ -83,7 +100,7 @@ This is a front-end prototype, not a production-ready multi-user service.
    - `groups/<group-id>/...`
 6. For production security, use RLS policies rather than open public access.
 
-This starter app uploads group attachments to shared storage and writes their metadata to the shared notes table. If cloud storage is unavailable, the file is retained locally and is not shown as a shared group resource.
+This starter app uploads group attachments to private shared storage and writes their metadata to the shared notes table. Group upload failures are reported; files selected for a group are never silently stored as personal files. Personal files without cloud storage stay in this browser (1 MB maximum); cloud uploads are limited to 4 MB. Shared folders and note comments require the latest `groups.sql` schema. The collaborative whiteboard stores strokes and syncs them between group members; it is a drawing canvas, not an infinite-canvas document editor.
 
 ## Suggested next steps for the team
 1. Add a React/Vite project structure.

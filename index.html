@@ -5,7 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#101827" />
   <title>FocusTogether — Group Study</title>
+  <link rel="icon" type="image/png" href="assets/focustogether-mark.png" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="friends.css" />
+  <link rel="stylesheet" href="dark-mode.css" />
+  <link rel="stylesheet" href="planner.css" />
+  <link rel="stylesheet" href="groups-layout.css" />
 </head>
 <body>
   <style>
@@ -75,8 +80,7 @@
     <div class="auth-card">
       <div class="auth-header">
         <div class="brand" style="justify-content:center;padding-bottom:0;">
-          <div class="brand-mark">F</div>
-          <div><strong>FocusTogether</strong><small>Study, together.</small></div>
+          <img class="auth-brand-logo" src="assets/focustogether-logo.png" alt="FocusTogether — Study, Discuss, Grow" />
         </div>
         <h2 id="authTitle">Welcome back</h2>
         <p id="authSubtitle">Login to continue with your study groups.</p>
@@ -113,11 +117,14 @@
   </div>
   <div class="app-shell hidden">
     <aside class="sidebar">
-      <div class="brand"><div class="brand-mark">F</div><div><strong>FocusTogether</strong><small>Study, together.</small></div></div>
+      <div class="brand"><img class="brand-logo" src="assets/focustogether-mark.png" alt="" /><div><strong>FocusTogether</strong><small>Study, together.</small></div></div>
       <div class="sidebar-label">WORKSPACE</div>
       <button class="nav-item active" data-view="dashboard"><span>◫</span> Dashboard</button>
+      <button class="nav-item" data-view="analysis-progress"><span>▤</span> Analysis &amp; Progress</button>
       <button class="nav-item" data-view="groups"><span>♧</span> Study groups</button>
+      <button class="nav-item" data-view="friends"><span>◎</span> Friends</button>
       <button class="nav-item" data-view="sessions"><span>◷</span> Study sessions</button>
+      <button class="nav-item" data-view="study-history"><span>▥</span> Study history</button>
       <button class="nav-item" data-view="notes"><span>▤</span> Notes & uploads</button>
       <button class="nav-item" data-view="assistant"><span>✳</span> AI study assistant</button>
       <div class="sidebar-bottom">
@@ -129,7 +136,7 @@
     <main class="main">
       <header class="topbar">
         <div><div class="eyebrow" id="todayLabel">YOUR STUDY SPACE</div><h1 id="pageTitle">Good study session.</h1></div>
-        <div class="top-actions"><button class="icon-button" id="notifyBtn" title="Enable reminders">♧</button><button class="primary-button" id="quickStart">＋ Start focus session</button></div>
+        <div class="top-actions"><button class="icon-button" id="themeToggle" type="button" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode">☾</button><button class="icon-button" id="notifyBtn" title="Enable reminders">♧</button><button class="primary-button" id="quickStart">＋ Start focus session</button></div>
       </header>
       <div id="notice" class="notice hidden"></div>
       <section id="view-dashboard" class="view">
@@ -151,38 +158,129 @@
           </article>
           <article class="panel"><div class="panel-heading"><div><h3>Next study session</h3><p>Plan it. Show up. Learn together.</p></div><button class="text-button" data-go="sessions">View all ↗</button></div><div id="upcomingList" class="stack-list empty-state">No sessions scheduled yet.<br/>Add one to get started.</div><button class="outline-button full" id="addSessionQuick">＋ Schedule a session</button></article>
         </div>
-        <div class="content-grid lower-grid">
-          <article class="panel"><div class="panel-heading"><div><h3>Your tasks</h3><p>Keep the next step clear.</p></div><button class="text-button" data-go="groups">Manage ↗</button></div><div id="taskPreview" class="stack-list empty-state">No tasks yet. Create a group and add your first task.</div></article>
-          <article class="panel"><div class="panel-heading"><div><h3>Study rhythm</h3><p>Your recent focus days</p></div></div><div id="weekChart" class="week-chart"></div><div class="chart-legend"><span><i></i> Focus minutes</span><strong id="weekTotal">0 minutes this week</strong></div></article>
+        <div class="content-grid lower-grid"><article class="panel"><div class="panel-heading"><div><h3>Your tasks</h3><p>Keep the next step clear.</p></div><button class="text-button" data-go="groups">Manage ↗</button></div><div id="taskPreview" class="stack-list empty-state">No tasks yet. Create a group and add your first task.</div></article><article class="panel"><div class="panel-heading"><div><h3>Build your study rhythm</h3><p>Set goals and review your progress.</p></div></div><p class="analysis-dashboard-copy">Track your daily focus, weekly goals, and study history in one place.</p><button class="primary-button" type="button" data-go="analysis-progress">Open Analysis &amp; Progress</button></article></div>
+      </section>
+      <section id="view-analysis-progress" class="view hidden">
+        <div class="section-intro"><div><h2>Analysis &amp; Progress</h2><p>Write your own daily and weekly goals, then mark them complete when you finish.</p></div><button class="primary-button" type="button" data-go="study-history">View study history</button></div>
+        <div class="stats-grid analysis-stats-grid">
+          <article class="stat-card"><div class="stat-top"><span>Today</span><span class="stat-icon purple">◷</span></div><strong id="todayFocusStat">0h 0m</strong><small>Study time</small></article>
+          <article class="stat-card"><div class="stat-top"><span>This week</span><span class="stat-icon blue">▥</span></div><strong id="weeklyFocusStat">0h 0m</strong><small>Study time</small></article>
+          <article class="stat-card"><div class="stat-top"><span>This month</span><span class="stat-icon blue">◫</span></div><strong id="monthlyFocusStat">0h 0m</strong><small>Study time</small></article>
+          <article class="stat-card"><div class="stat-top"><span>Goal completion</span><span class="stat-icon green">✓</span></div><strong id="goalCompletionStat">0%</strong><small id="goalCompletionDetail">Complete your daily or weekly goal</small></article>
+          <article class="stat-card"><div class="stat-top"><span>Study streak</span><span class="stat-icon orange">✦</span></div><strong id="studyStreakStat">0 days</strong><small>Consecutive focus days</small></article>
         </div>
+        <div class="analysis-goals-grid">
+          <article class="panel analysis-goal-card">
+            <div class="panel-heading"><div><h3>Today's goal</h3><p id="dailyGoalProgressText">Write one goal for today.</p></div><span class="analysis-goal-icon">◷</span></div>
+            <div id="dailyGoalStatus" class="goal-status">Incomplete</div>
+            <button id="dailyGoalToggle" class="goal-completion-button" type="button">Mark complete</button>
+            <form id="dailyGoalForm" class="analysis-goal-form"><label for="dailyGoalInput">My goal for today</label><div><input id="dailyGoalInput" type="text" maxlength="200" placeholder="e.g. Revise chapter 3" required/><button class="primary-button" type="submit">Save goal</button></div></form>
+          </article>
+          <article class="panel analysis-goal-card">
+            <div class="panel-heading"><div><h3>This week's goal</h3><p id="weekGoalSummary">Write one goal for this week.</p></div><span class="analysis-goal-icon">✦</span></div>
+            <div class="weekly-goal-status-row"><div id="weeklyGoalStatus" class="goal-status">Incomplete</div><div id="weeklyPieChart" class="weekly-pie-chart" role="img"><span id="weekGoalPercent">0%</span></div></div>
+            <button id="weeklyGoalToggle" class="goal-completion-button" type="button">Mark complete</button>
+            <form id="weeklyGoalForm" class="analysis-goal-form"><label for="weeklyGoalInput">My goal for this week</label><div><input id="weeklyGoalInput" type="text" maxlength="200" placeholder="e.g. Finish my biology project" required/><button class="primary-button" type="submit">Save goal</button></div></form>
+          </article>
+        </div>
+        <article class="panel analysis-chart-panel">
+          <div class="panel-heading"><div><h3>Progress calendar</h3><p>Select dates to review your focus and finished tasks.</p></div></div>
+          <form id="progressRangeForm" class="progress-range-form">
+            <label>From <input id="progressStartDate" type="date" required/></label>
+            <label>To <input id="progressEndDate" type="date" required/></label>
+            <div class="progress-range-presets" aria-label="Quick date ranges">
+              <button class="range-preset-button" type="button" data-progress-days="7" aria-pressed="true">7 days</button>
+              <button class="range-preset-button" type="button" data-progress-days="30" aria-pressed="false">30 days</button>
+            </div>
+            <button class="primary-button" type="submit">Show progress</button>
+            <button id="downloadProgressReport" class="secondary-button" type="button">Download report</button>
+          </form>
+          <div class="progress-range-summary" aria-live="polite">
+            <strong id="progressRangeLabel">Select a date range</strong>
+            <span id="progressRangeTotals">0 focus minutes · 0 tasks completed</span>
+          </div>
+          <div class="range-chart-grid">
+            <section class="range-chart-card">
+              <h4>Study progress</h4>
+              <p>Daily focus minutes · X-axis: date · Y-axis: minutes</p>
+              <div id="rangeBarChart" class="range-bar-chart" role="img"></div>
+            </section>
+            <section class="range-chart-card range-pie-card">
+              <h4>Study days</h4>
+              <p>Days with focus recorded in this range</p>
+              <div id="rangePieChart" class="range-pie-chart" role="img"><span id="rangePiePercent">0%</span></div>
+              <div id="rangePieSummary" class="range-pie-summary">0 of 0 days</div>
+              <div class="range-pie-legend"><span><i></i> Studied</span><span><i></i> No focus recorded</span></div>
+            </section>
+          </div>
+          <div class="analysis-breakdowns">
+            <section class="analysis-breakdown panel-inset">
+              <div class="panel-heading"><div><h3>Subject-wise progress</h3><p>Completed tasks grouped by study-group subject; focus sessions are not subject-tagged.</p></div></div>
+              <div id="subjectProgressList" class="analysis-breakdown-list"></div>
+            </section>
+            <section class="analysis-breakdown panel-inset">
+              <div class="panel-heading"><div><h3>Group study statistics</h3><p>Completed and remaining tasks in each group</p></div></div>
+              <div id="groupProgressList" class="analysis-breakdown-list"></div>
+            </section>
+          </div>
+          <div id="progressCalendar" class="progress-calendar" aria-live="polite"></div>
+          <div class="calendar-heatmap-legend"><span>Less focus</span><i data-intensity="0"></i><i data-intensity="1"></i><i data-intensity="2"></i><i data-intensity="3"></i><i data-intensity="4"></i><span>More focus</span></div>
+          <p id="undatedCompletedTasks" class="undated-task-note hidden"></p>
+        </article>
       </section>
       <section id="view-groups" class="view hidden">
         <div class="section-intro"><div><h2>Study groups</h2><p>Create a focused space for each subject or project, or join with an invite code.</p></div><div class="group-page-actions"><button class="outline-button" id="joinGroupBtn">Join group</button><button class="primary-button" id="createGroupBtn">＋ Create group</button></div></div>
         <div id="groupsGrid" class="groups-grid"></div>
       </section>
+      <section id="view-friends" class="view hidden">
+        <div class="section-intro"><div><h2>Friends</h2><p>Find study friends by UID, share your profile, and see who's online.</p></div></div>
+        <div class="friends-discovery panel">
+          <div class="my-friend-uid"><span>Your UID</span><strong id="myFriendUid">Loading…</strong><button class="secondary-button" id="copyFriendUidBtn" type="button">Copy UID</button></div>
+          <form id="friendSearchForm" class="friend-search-form"><label for="friendSearchInput">Find a friend by UID</label><div><input id="friendSearchInput" minlength="15" maxlength="15" placeholder="FT-1A2B3C4D5E6F" autocomplete="off" required/><button class="primary-button" type="submit">Search</button></div></form>
+          <div id="friendSearchResults" class="friend-discovery-results" aria-live="polite"></div>
+        </div>
+        <section class="friend-requests-section"><h3>Friend requests</h3><div id="incomingFriendRequests" class="friend-request-list panel" aria-live="polite">No new requests.</div></section>
+        <div class="friends-summary panel"><span class="friends-summary-dot"></span><strong id="onlineFriendCount">0</strong><span>friends online</span></div>
+        <div id="friendsList" class="friends-list panel" aria-live="polite"></div>
+      </section>
       <section id="view-sessions" class="view hidden">
         <div class="section-intro"><div><h2>Study sessions</h2><p>Set a time and get a reminder when it's time to study.</p></div><button class="primary-button" id="createSessionBtn">＋ Schedule session</button></div>
         <div class="panel"><div id="sessionsList" class="stack-list empty-state">No sessions scheduled yet.</div></div>
       </section>
+      <section id="view-study-history" class="view hidden">
+        <div class="section-intro"><div><h2>Study history</h2><p>Review completed focus sessions and your study progress.</p></div></div>
+        <div class="panel"><div id="studyHistoryList" class="stack-list empty-state">Complete a focus session to start building your history.</div></div>
+      </section>
       <section id="view-notes" class="view hidden">
-        <div class="section-intro"><div><h2>Notes & uploads</h2><p>Keep explanations, images, and learning resources in one place.</p></div><button class="primary-button" id="addNoteBtn">＋ Add note</button></div>
-        <div class="upload-banner"><div class="upload-symbol">↑</div><div><strong>Upload a photo or study document</strong><p>Choose a group to share files with its members; personal uploads stay in this browser.</p></div><select id="fileGroupSelect" aria-label="Share uploads with a study group"></select><label class="secondary-button file-button">Choose files<input id="fileInput" type="file" accept="image/*,.txt,.pdf" multiple /></label></div>
+        <div class="section-intro"><div><h2>Notes & resources</h2><p>A shared library for notes, documents, and team ideas.</p></div><div class="resource-header-actions"><button class="secondary-button" id="createResourceFolderBtn" type="button">＋ New folder</button><button class="primary-button" id="addNoteBtn">＋ Add note</button></div></div>
+        <div class="resource-library-toolbar panel">
+          <label>Library<select id="resourceGroupFilter" aria-label="Filter resources by library"></select></label>
+          <label>Folder<select id="resourceFolderFilter" aria-label="Filter resources by folder"></select></label>
+          <label class="resource-search">Search<input id="resourceSearch" type="search" placeholder="Find a note or file..." autocomplete="off"/></label>
+        </div>
+        <div class="upload-banner"><div class="upload-symbol">↑</div><div><strong>Upload a photo or study document</strong><p>PDFs, images, and text files up to 4 MB. Group files are private to authorized members.</p></div><select id="fileGroupSelect" aria-label="Share uploads with a study group"></select><select id="fileFolderSelect" aria-label="Upload to a folder"></select><label class="secondary-button file-button">Choose files<input id="fileInput" type="file" accept="image/*,.txt,.pdf" multiple /></label></div>
         <div id="notesGrid" class="notes-grid"></div>
+        <div class="resource-folder-dialog-help">Shared folders and group files follow your group owner's access settings.</div>
       </section>
       <section id="view-assistant" class="view hidden">
         <div class="section-intro"><div><h2>AI study assistant</h2><p>Ask a question, break down a concept, or plan your revision.</p></div><span class="demo-label">AI-POWERED</span></div>
-        <div class="assistant-layout"><div class="assistant-chat panel"><div class="assistant-head"><div class="assistant-avatar">✳</div><div><strong>Study Buddy</strong><small><span class="online-dot"></span> Ready to help · Secure AI</small></div></div><div id="chatMessages" class="chat-messages"><div class="chat-bubble bot">Hi! I'm your AI study helper. Ask me a question or choose a prompt below.</div></div><div class="suggestions"><button class="suggestion">Explain recursion simply</button><button class="suggestion">Make a revision plan</button><button class="suggestion">Quiz me on databases</button></div><form id="chatForm" class="chat-form"><input id="chatInput" maxlength="4000" placeholder="Ask an academic question..." autocomplete="off" required/><button class="primary-button" type="submit">Send ↑</button></form></div><div class="panel assistant-side"><h3>Ways I can help</h3><div class="helper-row"><span>✦</span><div><strong>Understand concepts</strong><p>Ask for simpler explanations and examples.</p></div></div><div class="helper-row"><span>▤</span><div><strong>Revise efficiently</strong><p>Turn a topic into a checklist or quiz.</p></div></div><div class="helper-row"><span>◷</span><div><strong>Stay on track</strong><p>Break big goals into focused sessions.</p></div></div><div class="warning-note">Your messages are sent to a secure Supabase Edge Function. The Gemini API key stays on the server and is never exposed in this app.</div></div></div>
+        <div class="assistant-layout"><div class="assistant-chat panel"><div class="assistant-head"><div class="assistant-avatar">✳</div><div><strong>Study Buddy</strong><small><span class="online-dot"></span> Ready to help · Secure AI</small></div></div><div class="study-pack-controls"><label>Study tool<select id="assistantMode"><option value="ask">Ask a doubt</option><option value="summary">Summarize notes</option><option value="quiz">Make a practice quiz</option><option value="flashcards">Create flashcards</option><option value="plan">Build a study plan</option></select></label><label>Answer language<select id="assistantLanguage"><option value="hinglish">Hinglish</option><option value="english">English</option></select></label><label>Use a saved note<select id="assistantSavedNote"><option value="">Choose a text note (optional)</option></select></label><label class="assistant-material-label">Study material<textarea id="assistantMaterial" rows="4" maxlength="12000" placeholder="Paste your notes or study material here (up to 12,000 characters)."></textarea></label><label class="assistant-file-label">Or load a text file<input id="assistantTextFile" type="file" accept=".txt,.md,.csv,text/plain,text/markdown,text/csv"/></label></div><div id="chatMessages" class="chat-messages" aria-live="polite"><div class="chat-bubble bot">Hi! I'm your AI study helper. Ask a question or choose a study tool. You can add your notes above for a more relevant result.</div></div><div class="suggestions"><button class="suggestion">Explain recursion simply</button><button class="suggestion">Make a revision plan</button><button class="suggestion">Quiz me on databases</button></div><form id="chatForm" class="chat-form"><input id="chatInput" maxlength="4000" placeholder="Ask an academic question..." autocomplete="off" required/><button class="primary-button" type="submit">Generate ↑</button></form></div><div class="panel assistant-side"><h3>Ways I can help</h3><div class="helper-row"><span>✦</span><div><strong>Understand concepts</strong><p>Ask for simpler explanations and examples.</p></div></div><div class="helper-row"><span>▤</span><div><strong>Revise efficiently</strong><p>Turn your notes into summaries, quizzes, or flashcards.</p></div></div><div class="helper-row"><span>◷</span><div><strong>Stay on track</strong><p>Build a practical study plan around a topic.</p></div></div><div class="warning-note">Your messages and selected study material are sent to a secure Supabase Edge Function. The Gemini API key stays on the server and is never exposed in this app. PDF files are not parsed here yet; paste their text or use a text export.</div></div></div>
       </section>
       <footer>FocusTogether <span>·</span> Built for focused learning <span>·</span> Prototype v1</footer>
     </main>
   </div>
+  <dialog id="groupChatDialog"><div class="dialog-head"><div><span class="eyebrow">STUDY TOGETHER</span><h2 id="groupChatTitle">Group chat</h2></div><button class="close-btn" id="closeGroupChatBtn" type="button" aria-label="Close group chat">×</button></div><div id="groupChatMessages" class="group-chat-messages" aria-live="polite"></div><form id="groupChatForm" class="group-chat-form"><label id="announcementOption" class="announcement-option hidden"><input id="groupChatAnnouncement" type="checkbox"/> Post as announcement</label><div class="group-chat-compose"><input id="groupChatInput" maxlength="2000" placeholder="Write a message..." required/><button class="primary-button" type="submit">Send</button></div></form></dialog>
+  <dialog id="groupManagementDialog"><div class="dialog-head"><div><span class="eyebrow">GROUP OWNER</span><h2 id="groupManagementTitle">Manage group</h2></div><button class="close-btn" id="closeGroupManagementBtn" type="button" aria-label="Close group management">×</button></div><p id="groupManagementStatus" class="auth-status error hidden" role="alert"></p><form id="groupPermissionsForm"><fieldset class="file-permission-settings"><legend>Member file access</legend><label><input id="membersCanUpload" type="checkbox"/> Members can upload files</label><label><input id="membersCanViewFiles" type="checkbox"/> Members can view files</label><label><input id="membersCanDeleteFiles" type="checkbox"/> Members can delete files</label></fieldset><button class="primary-button" type="submit">Save permissions</button></form><h3>Group members</h3><div id="groupMembersList" class="group-members-list" aria-live="polite"></div></dialog>
+  <dialog id="sharedTimerDialog"><div class="dialog-head"><div><span class="eyebrow">STUDY TOGETHER</span><h2 id="sharedTimerTitle">Shared focus timer</h2></div><button class="close-btn" id="closeSharedTimerBtn" type="button" aria-label="Close shared timer">×</button></div><div class="shared-timer-display"><span id="sharedTimerMode">FOCUS SESSION</span><strong id="sharedTimerCountdown">25:00</strong><small id="sharedTimerStatus">Ready for your group</small></div><div class="shared-timer-controls"><button class="primary-button" id="sharedTimerStartBtn" type="button">Start</button><button class="secondary-button" id="sharedTimerResetBtn" type="button">Reset</button><button class="secondary-button" id="sharedTimerBreakBtn" type="button">Break</button></div><p class="shared-timer-help">This timer is shared with every member of this study group.</p></dialog>
+  <dialog id="groupWhiteboardDialog"><div class="dialog-head"><div><span class="eyebrow">COLLABORATIVE WHITEBOARD</span><h2 id="groupWhiteboardTitle">Group whiteboard</h2><p id="whiteboardSyncStatus" class="whiteboard-sync-status">Opening shared canvas…</p></div><button class="close-btn" id="closeWhiteboardBtn" type="button" aria-label="Close whiteboard">×</button></div><div class="whiteboard-toolbar"><div class="whiteboard-tool-group" role="group" aria-label="Drawing tools"><button class="whiteboard-tool is-active" type="button" data-whiteboard-tool="pen" aria-pressed="true">Pen</button><button class="whiteboard-tool" type="button" data-whiteboard-tool="marker" aria-pressed="false">Marker</button><button class="whiteboard-tool" type="button" data-whiteboard-tool="eraser" aria-pressed="false">Eraser</button></div><label>Color<input id="whiteboardColor" type="color" value="#5144d3"/></label><label>Size<select id="whiteboardWidth"><option value="2">Fine</option><option value="4" selected>Medium</option><option value="7">Thick</option></select></label><button class="secondary-button" id="undoWhiteboardBtn" type="button">Undo my last stroke</button><button class="secondary-button" id="clearWhiteboardBtn" type="button">Clear board</button></div><div class="whiteboard-canvas-wrap"><canvas id="groupWhiteboardCanvas" aria-label="Shared group whiteboard"></canvas></div><p class="whiteboard-help">Changes sync automatically with group members. Only the group owner can clear the board.</p></dialog>
   <dialog id="groupDialog"><form id="groupForm"><div class="dialog-head"><div><span class="eyebrow">YOUR LEARNING CIRCLE</span><h2>Create a study group</h2></div><button class="close-btn" id="closeGroupDialogBtn" type="button" aria-label="Close">×</button></div><label>Group name<input id="groupName" required maxlength="80" placeholder="e.g. BCA Semester 1"/></label><label>Subject or goal<input id="groupSubject" required maxlength="80" placeholder="e.g. C Programming"/></label><label>Description<textarea id="groupDescription" maxlength="300" placeholder="What will you study together?"></textarea></label><div class="dialog-actions"><button class="secondary-button" id="cancelGroupBtn" type="button">Cancel</button><button class="primary-button" id="saveGroup" type="submit">Create group</button></div></form></dialog>
   <dialog id="joinGroupDialog"><form id="joinGroupForm"><div class="dialog-head"><div><span class="eyebrow">JOIN A LEARNING CIRCLE</span><h2>Enter invite code</h2></div><button class="close-btn" id="closeJoinGroupDialogBtn" type="button" aria-label="Close">×</button></div><p>Ask a group member to share their invite code with you.</p><label>Invite code<input id="joinGroupCode" required minlength="4" maxlength="12" pattern="[A-Za-z0-9-]+" autocomplete="off" placeholder="e.g. A1B2C3D4"/></label><p id="joinGroupStatus" class="auth-status" aria-live="polite"></p><div class="dialog-actions"><button class="secondary-button" id="cancelJoinGroupBtn" type="button">Cancel</button><button class="primary-button" id="submitJoinGroupBtn" type="submit">Join group</button></div></form></dialog>
   <dialog id="taskDialog"><form id="taskForm"><div class="dialog-head"><div><span class="eyebrow">STAY ACCOUNTABLE</span><h2>Add a study task</h2></div><button class="close-btn" id="closeTaskDialogBtn" type="button" aria-label="Close">×</button></div><label>Task title<input id="taskTitle" maxlength="200" required placeholder="e.g. Revise pointers"/></label><label>Study group<select id="taskGroup"></select></label><label>Due date<input id="taskDue" type="date"/></label><div class="dialog-actions"><button class="secondary-button" id="cancelTaskBtn" type="button">Cancel</button><button class="primary-button" id="saveTask" type="submit">Add task</button></div></form></dialog>
   <dialog id="sessionDialog"><form method="dialog" id="sessionForm"><div class="dialog-head"><div><span class="eyebrow">MAKE TIME TO LEARN</span><h2>Schedule a session</h2></div><button class="close-btn" id="closeSessionDialogBtn" type="button" aria-label="Close">×</button></div><label>Session title<input id="sessionTitle" required placeholder="e.g. Data structures revision"/></label><label>Study group<select id="sessionGroup"></select></label><div class="form-row"><label>Date<input id="sessionDate" type="date" required/></label><label>Time<input id="sessionTime" type="time" required/></label></div><label>Reminder<select id="sessionReminder"><option value="0">At start time</option><option value="5">5 minutes before</option><option value="15" selected>15 minutes before</option><option value="30">30 minutes before</option></select></label><div class="dialog-actions"><button class="secondary-button" id="cancelSessionBtn" type="button">Cancel</button><button class="primary-button" id="saveSession" value="default">Schedule</button></div></form></dialog>
-  <dialog id="noteDialog"><form method="dialog" id="noteForm"><div class="dialog-head"><div><span class="eyebrow">SAVE WHAT YOU LEARN</span><h2>Add a note</h2></div><button class="close-btn" id="closeNoteDialogBtn" type="button" aria-label="Close">×</button></div><label>Title<input id="noteTitle" maxlength="160" required placeholder="e.g. Binary search"/></label><label>Study group<select id="noteGroup"></select></label><label>Content<textarea id="noteContent" rows="5" placeholder="Write your key points..."></textarea></label><div class="dialog-actions"><button class="secondary-button" id="cancelNoteBtn" type="button">Cancel</button><button class="primary-button" id="saveNote" value="default">Save note</button></div></form></dialog>
-  <dialog id="noteViewerDialog"><div class="dialog-head"><div><span class="eyebrow">STUDY LIBRARY</span><h2 id="noteViewerTitle">Resource</h2></div><button class="close-btn" id="closeNoteViewerBtn" type="button" aria-label="Close">×</button></div><div id="noteViewerContent" class="note-viewer-content"></div></dialog>
-  <dialog id="profileDialog"><form id="profileForm"><div class="dialog-head"><div><span class="eyebrow">YOUR ACCOUNT</span><h2>Edit profile</h2></div><button class="close-btn" id="closeProfileDialogBtn" type="button" aria-label="Close">×</button></div><div class="profile-editor-avatar" id="profileEditorAvatar">S</div><label>Profile photo<input id="profilePhoto" type="file" accept="image/*" /></label><button class="text-button" id="removeProfilePhotoBtn" type="button">Remove photo</button><label>Display name<input id="profileEditName" type="text" maxlength="40" required placeholder="Your name" /></label><label>Bio<textarea id="profileEditBio" rows="3" maxlength="160" placeholder="A short line about you"></textarea></label><p class="auth-status">Your profile is saved in this browser.</p><div class="dialog-actions"><button class="secondary-button" id="cancelProfileBtn" type="button">Cancel</button><button class="primary-button" type="submit">Save profile</button></div></form></dialog>
+  <dialog id="noteDialog"><form method="dialog" id="noteForm"><div class="dialog-head"><div><span class="eyebrow">SAVE WHAT YOU LEARN</span><h2>Add a note</h2></div><button class="close-btn" id="closeNoteDialogBtn" type="button" aria-label="Close">×</button></div><label>Title<input id="noteTitle" maxlength="160" required placeholder="e.g. Binary search"/></label><label>Study group<select id="noteGroup"></select></label><label>Folder<select id="noteFolder"></select></label><label>Content<textarea id="noteContent" rows="5" placeholder="Write your key points..."></textarea></label><div class="dialog-actions"><button class="secondary-button" id="cancelNoteBtn" type="button">Cancel</button><button class="primary-button" id="saveNote" value="default">Save note</button></div></form></dialog>
+  <dialog id="resourceFolderDialog"><form id="resourceFolderForm"><div class="dialog-head"><div><span class="eyebrow">ORGANIZE RESOURCES</span><h2>Create a folder</h2></div><button class="close-btn" id="closeResourceFolderBtn" type="button" aria-label="Close">×</button></div><label>Library<select id="resourceFolderGroup"></select></label><label>Folder name<input id="resourceFolderName" maxlength="60" required placeholder="e.g. Exam revision"/></label><p class="resource-folder-dialog-help">Folders created in a group are shared with its members. Choose Personal library to keep this folder on this device.</p><div class="dialog-actions"><button class="secondary-button" id="cancelResourceFolderBtn" type="button">Cancel</button><button class="primary-button" type="submit">Create folder</button></div></form></dialog>
+  <dialog id="noteViewerDialog"><div class="dialog-head"><div><span class="eyebrow">STUDY LIBRARY</span><h2 id="noteViewerTitle">Resource</h2></div><button class="close-btn" id="closeNoteViewerBtn" type="button" aria-label="Close">×</button></div><div id="noteViewerContent" class="note-viewer-content"></div><section class="note-comments"><div class="note-comments-heading"><h3>Comments</h3><span id="noteCommentCount">0</span></div><div id="noteCommentsList" class="note-comments-list" aria-live="polite"></div><form id="noteCommentForm" class="note-comment-form"><label for="noteCommentInput">Add a comment</label><textarea id="noteCommentInput" maxlength="1000" rows="2" placeholder="Share a helpful thought..." required></textarea><button class="primary-button" type="submit">Post comment</button></form></section></dialog>
+  <dialog id="profileDialog"><form id="profileForm"><div class="dialog-head"><div><span class="eyebrow">YOUR ACCOUNT</span><h2>Edit profile</h2></div><button class="close-btn" id="closeProfileDialogBtn" type="button" aria-label="Close">×</button></div><div class="profile-editor-avatar" id="profileEditorAvatar">S</div><label>Profile photo<input id="profilePhoto" type="file" accept="image/*" /></label><button class="text-button" id="removeProfilePhotoBtn" type="button">Remove photo</button><label>Display name<input id="profileEditName" type="text" maxlength="40" required placeholder="Your name" /></label><label>Bio<textarea id="profileEditBio" rows="3" maxlength="160" placeholder="A short line about you"></textarea></label><p class="auth-status">Your UID: <strong id="profileFriendUid">Loading…</strong> <button class="secondary-button" id="copyProfileFriendUidBtn" type="button">Copy UID</button></p><p class="auth-status">Share this UID so someone can search it and find your name and photo. Your profile name and photo are visible to signed-in users who search your exact UID.</p><div class="dialog-actions"><button class="secondary-button" id="cancelProfileBtn" type="button">Cancel</button><button class="primary-button" type="submit">Save profile</button></div></form></dialog>
   <dialog id="callDialog"><form method="dialog" id="callForm"><div class="dialog-head"><div><span class="eyebrow">GROUP STUDY ROOM</span><div class="call-room-heading"><h2 id="callRoomName">Study Room</h2><span id="callLiveIndicator" class="call-live-indicator" data-state="idle"><i></i><span id="callLiveText">Not connected</span></span></div></div><button class="close-btn" value="cancel" aria-label="Close and leave room">×</button></div><div class="call-room-meta"><span>Group invite code: <strong id="callRoomCodeLabel">—</strong></span><span id="callParticipantCount">0 students</span></div><p class="warning-note">Only signed-in members of this study group can join its call.</p><label for="callRoomCode">Join your group's call</label><div class="call-room-input"><input id="callRoomCode" autocomplete="off" maxlength="64" placeholder="Enter group invite code" required/><button type="button" class="outline-button" id="copyCallCodeBtn">Copy code</button></div><div class="call-controls"><button type="button" class="primary-button" id="joinCallBtn">Join study room</button><button type="button" class="secondary-button" id="cameraBtn" disabled>Turn camera off</button><button type="button" class="secondary-button" id="micBtn" disabled>Mute microphone</button><button type="button" class="secondary-button" id="speakerBtn" disabled>Speaker on</button><button type="button" class="secondary-button" id="shareBtn" disabled>Share screen</button></div><div id="callVideoGrid" class="call-video-grid"><div class="call-video-tile hidden" id="localVideoTile"><video id="localVideo" autoplay muted playsinline></video><span id="localVideoLabel">You</span></div></div><p id="callStatus" class="call-status" aria-live="polite">Enter a group invite code and join to start a call.</p><div class="dialog-actions"><button type="button" class="primary-button" id="leaveStudyRoomBtn" disabled>Leave Study Room</button></div></form></dialog>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>

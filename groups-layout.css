@@ -1,0 +1,35 @@
+.groups-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  align-items: stretch;
+}
+
+.group-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.group-card h3,
+.group-card p,
+.group-meta {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.group-meta {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+
+.group-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 120px), 1fr));
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 14px;
+}
+
+.group-actions button {
+  min-width: 0;
+  white-space: normal;
+}
